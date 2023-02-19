@@ -1,0 +1,373 @@
+
+# Задачи на сортировку
+## Squares of a Sorted Array
+
+Задача: Given an integer array nums sorted in non-decreasing order, 
+return an array of the squares of each number sorted in non-decreasing order.
+
+Идея: сначала возводим в квадрат все элементы, а потом сортируем чем угодно.
+
+Решение:
+```python
+class Solution(object):
+    def sortedSquares(self, nums):
+        nums = [x**2 for x in nums]
+        nums.sort()
+        return nums
+
+```
+## Intersection of Two Arrays II
+
+Задача: Given two integer arrays nums1 and nums2,
+return an array of their intersection. 
+Each element in the result must appear 
+as many times as it shows in both arrays and you may return the result in any order.
+
+ 
+
+Идея: заводим новый массив. Он будет иметь длину наименьшего из доступных массивов. 
+
+Так мы рассматриваем наихудший случай, когда все элементы массива соответствуют друг другу.
+Идем по первому массиву и ищем совпадения во втором, попутно считая количество совпадений.
+Каждое совпадение - отдельный элемент массива, записываем его под индексом, равному номеру совпадения
+Увеличиваем счетчик совпадений для следующих итераций. 
+Заменяем элемент во втором массиве на MARKER, 
+чтобы не учитывать его в следующих итерациях (немного костыльное решение, вдруг в первом массиве есть значение MARKER).
+Делаем break, чтобы не искать совпадения во втором массиве, если уже нашли совпадение в первом.
+Воспользуемся методом Arrays.copyOf, чтобы скопировать массив нужной длины.
+
+
+Решение:
+
+```java
+class Solution {
+
+    private static final int MARKER = Integer.MIN_VALUE;
+
+    public int[] intersect(int[] nums1, int[] nums2) {
+        int[] result = new int[Math.min(nums1.length, nums2.length)];
+        int index = 0;
+        for (int i = 0; i < nums1.length; i++) {
+            for (int j = 0; j < nums2.length; j++) {
+                if (nums1[i] == nums2[j]) {
+                    result[index] = nums1[i];
+                    index++;
+                    nums2[j] = MARKER;
+                    break;
+                }
+            }
+        }
+
+        return Arrays.copyOf(result, index);
+
+    }
+}
+
+```
+
+Сложность: O(n*m), где n - длина первого массива, m - длина второго массива.
+
+
+## Group Anagrams
+
+Задача: Given an array of strings strs, group the anagrams together.
+
+Идея: Используем  хэш-таблицу,
+в которой ключами будут являться отсортированные буквы в каждом слове. 
+Значениями будут списки слов, которые имеют одинаковые наборы букв.
+
+Мы будем проходиться по каждому слову входного массива,
+сортировать его буквы,
+и использовать отсортированные буквы в качестве ключа для хэш-таблицы.
+Если ключ уже существует в хэш-таблице, мы добавляем текущее слово в список значений.
+Если ключа еще нет, мы создаем новый список значений, включая текущее слово в этот список.
+
+```java
+class Solution {
+    public List<List<String>> groupAnagrams(String[] strs) {
+        Map<String, List<String>> anagramGroups = new HashMap<>();
+        // пройдемся по всем строкам
+        for (String str : strs) {
+            // преобразуем строку в массив символов, сортируем массив
+            char[] charArr = str.toCharArray();
+            Arrays.sort(charArr);
+
+            // преобразуем массив символов в строку
+            String key = new String(charArr);
+            // если такой ключ еще не встречался, то создаем новый список
+            if (!anagramGroups.containsKey(key)) {
+                anagramGroups.put(key, new ArrayList<>());
+            }
+            // добавляем первоначальную строку в список
+            anagramGroups.get(key).add(str);
+        }
+        return new ArrayList<>(anagramGroups.values());
+    }
+}
+
+```
+
+Сложность: O(n*m*log(m)), где n - длина массива, m - длина самой длинной строки:
+- Сортировка одного слова занимает O(mlog(m)) времени. 
+Для всех слов в массиве будет затрачено O(nm*log(m)) времени.
+- Добавление и получение значений из хэш-таблицы выполняется за O(1) в среднем,
+поэтому общее время работы алгоритма составляет O(NKlog(K)).
+
+
+
+## Longest Word in Dictionary
+
+Задача: Given an array of strings words representing an English Dictionary, 
+return the longest word in words that can be built one character at a time by other words in words.
+If there is more than one possible answer, return the longest word with the smallest lexicographical order.
+If there is no answer, return the empty string.
+
+Идея: 
+
+1. Сначала отсортируем список слов в лексикографическом порядке.
+
+2. Затем создадим пустое множество (set) для хранения слов, которые можно построить из предыдущих слов.
+
+3. Пройдемся по отсортированному списку слов, 
+и для каждого слова проверим, можно ли его построить, используя только буквы предыдущих слов.
+
+4. Если да, то добавляем текущее слово в множество слов,
+которые можно построить, и продолжаем итерацию.
+
+5. В конце, вернем самое длинное слово,
+которое можно построить, используя только другие слова в списке.
+
+
+Решение:
+
+```java
+class Solution {
+    public String longestWord(String[] words) {
+        // сортируем слова в лексикографическом порядке
+        Arrays.sort(words);
+
+        // множество слов, которые можно построить из предыдущих слов
+        Set<String> wordSet = new HashSet<>();
+        String longestWord = "";
+
+        for (String word : words) {
+            // если слово состоит из одной буквы или можно построить его из предыдущих слов
+            if (word.length() == 1 || wordSet.contains(word.substring(0, word.length() - 1))) {
+                // не берем последнюю букву по условию. 
+                // Пример с world: ["w","wo","wor","worl"]
+                
+                // добавляем слово в множество слов
+                wordSet.add(word);
+
+                // если текущее слово длиннее, чем предыдущее самое длинное слово, то обновляем
+                // результат
+                if (word.length() > longestWord.length()) {
+                    longestWord = word;
+                }
+            }
+        }
+
+        return longestWord;
+    }
+
+}
+```
+
+## Анаграммы
+Даны два слова на отдельных строках.
+Слова состоят из строчных латинских букв и цифр. 
+Требуется вывести "YES"  – если введенные слова являются анаграммами друг друга, "NO"  – если нет.
+
+Идея: подсчитаем количество вхождений каждой буквы в первом слове. Каждая буква +1 
+подсчитаем количество вхождений каждой буквы во втором слове. Каждая буква -1
+Если после подсчета все элементы массива равны нулю, то слова являются анаграммами друг друга.
+
+```java
+class Solution {
+    public boolean isAnagram(String s, String t) {
+        if (s.length() != t.length()) {
+            return false;
+        }
+
+        // было бы достачно и 26 символов для английского алфавита,
+        // но 50 чтобы наверняка
+        int[] count1 = new int[50];
+        int[] count2 = new int[50];
+
+        for (int i = 0; i < s.length(); i++) {
+            count1[s.charAt(i) - 'a']++;
+            count2[t.charAt(i) - 'a']--;
+
+            // зачем вычитаем "a"?
+            // ответ кроется в работе Ascii и метода charAt таблицы и алгебре char
+            // charAt возвращает символ, который находится в таблице Ascii
+            // символ минус символ дает число, которое соответствует позиции символа в
+            // таблице
+            // Примеры:
+            // 'a' - 'a' = 0 'a' имеет код ASCII 97
+            // 'b' - 'a' = 1 'a' имеет код ASCII 97, 'b' - 98
+            // 'c' - 'a' = 2 'a' имеет код ASCII 97, 'c' - 99
+
+        }
+
+        выполняется за O(1) в среднем, поэтому общее время работы алгоритма составляет O(N)
+        for (int i = 0; i < 50; i++) {
+            if (count1[i] + count2[i] != 0) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+}
+```
+
+Сложность алгоритма: O(n), где n - длина строки.
+
+
+## Числа 
+
+Задача: 
+Саша и Катя учатся в начальной школе.
+Для изучения арифметики при этом используются карточки, на которых написаны цифры 
+(на каждой карточке написана ровно одна цифра). 
+Однажды они пришли на урок математики, и Саша, используя все свои карточки, показал число A, 
+а Катя показала число B.
+Учитель тогда захотел дать им такую задачу, чтобы ответ на нее смогли показать и Саша, и Катя,
+каждый используя только свои карточки. 
+При этом учитель хочет, чтобы искомое число было максимально возможным.
+
+Идея: применяем сортировку подсчетом
+
+```python
+import sys
+s1 = input()
+s2 = input()
+
+# массивы для каждой цифры
+l1 = [0] * 10
+l2 = [0] * 10
+for s in s1:
+    l1[int(s)] += 1
+for s in s2:
+    l2[int(s)] += 1
+
+
+b = 1 # флаг, нужен для того, чтобы не выводить ноль в конце
+ok = 0 # флаг, нужен для того, чтобы не выводить -1, если есть хоть одна общая цифра
+
+# пройдемся с 9 по 0
+for i in range(9, -1, -1):
+    if l1[i] > 0 and l2[i] > 0:
+        # если есть хоть одна общая цифра в обоих числах, выходим
+        ok = 1
+        
+        # Если дошли до нуля, то не выводим его в конце, не встретив других цифр, выводим ноль 
+        if i == 0:
+            b = 0
+        break
+
+# не нашли ни одной общей цифры, выходим
+if ok == 0:
+    print(-1)
+    sys.exit()
+    
+# если ноль есть, то не выводим его в конце
+if b == 0:
+    print(0)
+    sys.exit()
+
+for i in range(9, 0, -1):
+    print(*(min(l1[i], l2[i]) * [i]), sep="", end="")
+    # проходимся по каждой цифре и выводим минимальное из возможных встреч
+    # min - чтобы не вывести лишние цифры, которые есть только у одного числа
+
+if b:
+    # выводим ноли в конце, если есть
+    print(*(min(l1[0], l2[0]) * [0]), sep="", end="")
+    
+else:
+    print(0)
+```
+
+
+
+## Подсчет количества обменов в пузырьковой сортировке 
+Определите, сколько обменов сделает алгоритм пузырьковой сортировки
+ по возрастанию для данного массива.
+
+Идея: напишем обычный алгоритм пузырьковой сортировки, но только после каждой смены элементов будет прибавлять к счетчику +1.  
+
+
+```java	
+public static void main(String[] args) {
+        Scanner s = new Scanner(System.in);
+        int N = s.nextInt();
+        int[] a = new int[N];
+        for (int k = 0; k < a.length; k++) {
+            a[k] = s.nextInt();
+        }
+        int counter = 0;
+        for (int i = 0; i < a.length - 1; i++) {
+            for (int j = 0; j < a.length - i - 1; j++) {
+                if (a[j + 1] < a[j]) {
+                    int t = a[j];
+                    a[j] = a[j + 1];
+                    a[j + 1] = t;
+                    counter++;
+                }
+            }
+        }
+        System.out.println(counter);
+    }
+```	
+
+Сложность: O(n^2), где n - длина массива.
+
+## 
+
+## Мои долги
+1. https://codeforces.com/contest/1712/problem/C
+2. https://codeforces.com/problemset/problem/1605/B
+
+
+## Мои неразобранные задачи
+
+### Закраска прямой
+Ссылка на задачу: https://informatics.msk.ru/mod/statements/view3.php?chapterid=641#1
+
+На числовой прямой окрасили N отрезков. Известны координаты левого и правого концов каждого отрезка (Li
+ и Ri). Найти длину окрашенной части числовой прямой.
+
+Примечание: Метод сканирующей строки
+
+```python
+n = int(input())
+segments = []
+for i in range(n):
+    l, r = map(int, input().split())
+    segments.append((l, r))
+
+points = {}
+for l, r in segments:
+    if l in points:
+        points[l] += 1
+    else:
+        points[l] = 1
+    if r in points:
+        points[r] -= 1
+    else:
+        points[r] = -1
+
+sorted_points = sorted(points.keys())
+length = 0
+count = 0
+for i in range(len(sorted_points) - 1):
+    count += points[sorted_points[i]]
+    if count > 0:
+        length += sorted_points[i + 1] - sorted_points[i]
+
+print(length)
+```
+ 
